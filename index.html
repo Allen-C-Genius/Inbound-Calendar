@@ -127,16 +127,16 @@ body.drag .drop-hint{display:grid}
 .drop-hint span{background:var(--accent);color:#fff;padding:14px 24px;border-radius:12px;font-weight:600;box-shadow:var(--shadow)}
 
 /* modal */
-.ov{position:fixed;inset:0;background:rgba(10,14,20,.5);display:none;z-index:70;align-items:flex-start;justify-content:center;padding:5vh 16px}
+.ov{position:fixed;inset:0;background:rgba(10,14,20,.5);display:none;z-index:70;align-items:flex-start;justify-content:center;padding:3vh 12px}
 .ov.on{display:flex}
 .modal{background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;box-shadow:var(--shadow);
-  width:min(920px,100%);max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
-.modal .mh{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--border)}
-.modal .mh h3{margin:0;font-size:16px}
-.modal .mh .msub{color:var(--muted);font-size:12px;margin-top:2px}
+  width:min(1240px,97%);max-height:94vh;display:flex;flex-direction:column;overflow:hidden}
+.modal .mh{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border)}
+.modal .mh h3{margin:0;font-size:18px}
+.modal .mh .msub{color:var(--muted);font-size:13px;margin-top:3px}
 .modal .mb{overflow:auto;padding:0}
-table{width:100%;border-collapse:collapse;font-size:12.5px}
-th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);white-space:nowrap}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--border);white-space:nowrap}
 th{position:sticky;top:0;background:var(--surface-2);color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.02em}
 td.num{text-align:right}
 tr:hover td{background:var(--surface-2)}
@@ -282,6 +282,7 @@ tr:hover td{background:var(--surface-2)}
 
   <div class="foot">
     <span class="badge-src" id="srcBadge">샘플 데이터</span>
+    <span id="builtAt"></span>
     <span id="rangeInfo"></span>
     <span id="upInfo"></span>
     <span class="clink" id="clearBtn" hidden>누적 데이터 초기화</span>
@@ -313,6 +314,7 @@ tr:hover td{background:var(--surface-2)}
   // header aliases -> canonical
   var ALIAS={'입고예정일':'납품예정일','입고일':'납품일','거래처':'구매거래처','품목':'발주품목','품명':'발주품목','규격':'발주품목규격','단위':'구매단위','수량':'발주수량','입고창고':'창고','금액계':'원화금액계','발주금액':'발주원화금액','부가세':'원화부가세','단가':'원화단가'};
 
+  var BUILT_AT="2026-09-09 16:14";
   var RAW=[], DATA=[], SRC='sample', UPAT='', FILES=[];
   function loadInitial(){
     try{RAW=JSON.parse(document.getElementById('orders').textContent)||[];}catch(e){RAW=[];}
@@ -480,6 +482,8 @@ tr:hover td{background:var(--surface-2)}
     else if(SRC==='upload'){ sb.textContent='이 화면에만 반영됨'; sb.className='badge-src'; document.getElementById('upInfo').textContent=minfo+' · 공용 저장 안 됨'; }
     else if(SRC==='embed'){ sb.textContent='기본 데이터'; sb.className='badge-src'; document.getElementById('upInfo').textContent=minfo; }
     else{ sb.textContent='샘플 데이터'; sb.className='badge-src'; document.getElementById('upInfo').textContent='엑셀 업로드 시 실제 데이터로 대체'; }
+    var ba=document.getElementById('builtAt');
+    ba.textContent=(BUILT_AT&&BUILT_AT.indexOf('_'+'_')<0)?('🕒 업데이트 '+BUILT_AT):'';
     var emp=document.getElementById('empty');
     if(!mr.length){emp.hidden=false;emp.innerHTML='<b>'+(view.y)+'년 '+(view.m+1)+'월</b>에 표시할 입고 예정이 없습니다. 위 화살표로 다른 달을 보거나 필터를 확인하세요.';}
     else emp.hidden=true;
