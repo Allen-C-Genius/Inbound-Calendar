@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>발주입고 캘린더</title>
+<title>입고 예정일</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
 :root{
@@ -161,7 +161,7 @@ tr:hover td{background:var(--surface-2)}
 <div class="wrap">
   <header class="hd">
     <div>
-      <h1>발주입고 캘린더</h1>
+      <h1>입고 예정일</h1>
       <div class="sub"><b>납품예정일</b> 기준으로 그날 입고되는 품목을 자동 배치합니다</div>
     </div>
     <div class="hd-actions">
@@ -322,10 +322,7 @@ tr:hover td{background:var(--surface-2)}
   function monthKey(y,m){return y+'-'+pad(m+1);}
   function rowsWithDate(){return DATA.filter(function(r){return r['납품예정일'];});}
   function pickDefaultMonth(){
-    var cnt={}; rowsWithDate().forEach(function(r){var k=r['납품예정일'].slice(0,7);cnt[k]=(cnt[k]||0)+1;});
-    var keys=Object.keys(cnt); if(!keys.length){var t=new Date();return {y:t.getFullYear(),m:t.getMonth()};}
-    var best=keys.sort(function(a,b){return cnt[b]-cnt[a];})[0];
-    return {y:+best.slice(0,4),m:+best.slice(5,7)-1};
+    var t=new Date(); return {y:t.getFullYear(), m:t.getMonth()};  // 항상 현재 달로 시작
   }
 
   function passFilter(r){
