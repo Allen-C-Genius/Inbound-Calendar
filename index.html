@@ -158,6 +158,12 @@ tr:hover td{background:var(--surface-2)}
   padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
 .tab:hover{color:var(--ink)}
 .tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+/* 탭별 배경색 (눈에 띄게) */
+:root{ --bg-cal:#E9F0FF; --bg-ana:#EAF6F0; }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --bg-cal:#141C2E; --bg-ana:#12211B; } }
+:root[data-theme="dark"]{ --bg-cal:#141C2E; --bg-ana:#12211B; }
+#calView{background:var(--bg-cal);border:1px solid var(--border);border-radius:14px;padding:16px}
+#anaView{background:var(--bg-ana);border:1px solid var(--border);border-radius:14px;padding:16px}
 
 /* legend */
 .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted)}
@@ -185,7 +191,8 @@ tr:hover td{background:var(--surface-2)}
 .mbars .seg.late{background:var(--st-late)} .mbars .seg.pending{background:var(--st-pending)}
 .mbars .val{text-align:right;color:var(--muted)} .mbars .val b{color:var(--ink)}
 .vbars{display:flex;flex-direction:column;gap:7px}
-.vbars .row{display:grid;grid-template-columns:150px 1fr 46px;align-items:center;gap:10px;font-size:12px}
+.vbars .row{display:grid;grid-template-columns:210px 1fr 46px;align-items:center;gap:10px;font-size:12px}
+@media (max-width:640px){.vbars .row{grid-template-columns:120px 1fr 40px}}
 .vbars .lbl{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vbars .track{height:14px;background:var(--surface-2);border-radius:5px;overflow:hidden}
 .vbars .fill{height:100%;background:var(--st-late);border-radius:5px}
@@ -270,7 +277,7 @@ tr:hover td{background:var(--surface-2)}
       <div id="anaMonth" class="mbars"></div>
     </div>
     <div class="apanel">
-      <div class="ah"><h3>지연 많은 거래처</h3><span class="asub">지연 건수 상위 12</span></div>
+      <div class="ah"><h3>지연 많은 물품</h3><span class="asub">지연 건수 상위 20</span></div>
       <div id="anaVendor" class="vbars"></div>
     </div>
     <div class="apanel">
@@ -535,7 +542,7 @@ tr:hover td{background:var(--surface-2)}
     rows.forEach(function(r){
       var s=statusOf(r['납품예정일'], r['납품일']); c[s]++;
       var m=r['납품예정일'].slice(0,7); (mon[m]=mon[m]||{ontime:0,early:0,late:0,pending:0})[s]++;
-      if(s==='late'){var v=r['구매거래처']||'(미상)'; ven[v]=(ven[v]||0)+1;}
+      if(s==='late'){var it=isBC(r['발주품목'])?'바코드택':(r['발주품목']||'(미상)'); ven[it]=(ven[it]||0)+1;}
     });
     var tot=rows.length, deliv=c.ontime+c.early+c.late;
     var cards=[['총 발주 라인',tot.toLocaleString(),'건'],['입고완료',pctOf(deliv,tot)+'%','('+deliv.toLocaleString()+')'],
@@ -547,7 +554,7 @@ tr:hover td{background:var(--surface-2)}
       var segs=ORD.map(function(s){var w=t?100*a[s]/t:0;return w>0?'<div class="seg '+s+'" style="width:'+w+'%" title="'+ST_LABEL[s]+' '+a[s]+'건"></div>':'';}).join('');
       return '<div class="row"><span class="lbl">'+m.slice(2)+'월</span><div class="track">'+segs+'</div><span class="val">정시 <b>'+pctOf(a.ontime,d)+'%</b></span></div>';
     }).join('')||'<div class="empty">데이터 없음</div>';
-    var vlist=Object.keys(ven).map(function(k){return [k,ven[k]];}).sort(function(x,y){return y[1]-x[1];}).slice(0,12);
+    var vlist=Object.keys(ven).map(function(k){return [k,ven[k]];}).sort(function(x,y){return y[1]-x[1];}).slice(0,20);
     var vmax=vlist.length?vlist[0][1]:1;
     document.getElementById('anaVendor').innerHTML=vlist.map(function(x){
       return '<div class="row"><span class="lbl" title="'+esc(x[0])+'">'+esc(x[0])+'</span><div class="track"><div class="fill" style="width:'+(100*x[1]/vmax)+'%"></div></div><span class="val mono">'+x[1]+'</span></div>';
