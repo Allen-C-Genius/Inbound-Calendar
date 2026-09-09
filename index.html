@@ -140,6 +140,9 @@ th,td{text-align:left;padding:11px 16px;border-bottom:1px solid var(--border);wh
 th{position:sticky;top:0;background:var(--surface-2);color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.02em}
 td.num{text-align:right}
 tr:hover td{background:var(--surface-2)}
+tfoot td{position:sticky;bottom:0;background:var(--surface-2);border-top:2px solid var(--border-strong);padding:12px 16px}
+tfoot .tflbl{text-align:right;font-weight:600;color:var(--muted)}
+tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
 .whtag{display:inline-flex;align-items:center;gap:5px}
 .whtag i{width:8px;height:8px;border-radius:50%}
 .stbadge{display:inline-flex;align-items:center;gap:5px;font-weight:600}
@@ -314,7 +317,7 @@ tr:hover td{background:var(--surface-2)}
   // header aliases -> canonical
   var ALIAS={'입고예정일':'납품예정일','입고일':'납품일','거래처':'구매거래처','품목':'발주품목','품명':'발주품목','규격':'발주품목규격','단위':'구매단위','수량':'발주수량','입고창고':'창고','금액계':'원화금액계','발주금액':'발주원화금액','부가세':'원화부가세','단가':'원화단가'};
 
-  var BUILT_AT="2026-09-09 16:38";
+  var BUILT_AT="2026-09-09 17:15";
   var RAW=[], DATA=[], SRC='sample', UPAT='', FILES=[];
   function loadInitial(){
     try{RAW=JSON.parse(document.getElementById('orders').textContent)||[];}catch(e){RAW=[];}
@@ -510,6 +513,8 @@ tr:hover td{background:var(--surface-2)}
       }).join('')+'</tr>';
     });
     html+='</tbody>';
+    var tw=0; evs.forEach(function(r){tw+=(r['원화금액계']||r['발주원화금액']||0)||0;});
+    html+='<tfoot><tr><td colspan="9" class="tflbl">예정 총 입고금액</td><td class="num mono tfval">₩'+fmtWon.format(Math.round(tw))+'</td><td></td></tr></tfoot>';
     document.getElementById('mTable').innerHTML=html;
     document.getElementById('ov').classList.add('on');
   }
