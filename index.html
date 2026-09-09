@@ -142,8 +142,61 @@ td.num{text-align:right}
 tr:hover td{background:var(--surface-2)}
 .whtag{display:inline-flex;align-items:center;gap:5px}
 .whtag i{width:8px;height:8px;border-radius:50%}
+.stbadge{display:inline-flex;align-items:center;gap:5px;font-weight:600}
+.stbadge i{width:8px;height:8px;border-radius:2px;display:inline-block}
 .x{border:none;background:var(--surface-2);color:var(--ink);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px}
 .x:hover{background:var(--border-strong)}
+
+/* status colors */
+:root{ --st-ontime:#1E9E6A; --st-early:#2C82C9; --st-late:#E08A1E; --st-pending:#98A2B3; }
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){ --st-ontime:#39C08A; --st-early:#5B9BE6; --st-late:#E0A84B; --st-pending:#7C8798; } }
+:root[data-theme="dark"]{ --st-ontime:#39C08A; --st-early:#5B9BE6; --st-late:#E0A84B; --st-pending:#7C8798; }
+
+/* tabs */
+.tabs{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid var(--border)}
+.tab{font-family:inherit;font-size:14px;font-weight:600;color:var(--muted);background:none;border:none;
+  padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* legend */
+.legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.sw.ontime{background:var(--st-ontime)} .sw.early{background:var(--st-early)}
+.sw.late{background:var(--st-late)} .sw.pending{background:var(--st-pending)}
+.legend .lg-note{color:var(--faint)}
+
+/* event status bar */
+.ev{border-left:3px solid transparent;padding-left:5px}
+.ev.ontime{border-left-color:var(--st-ontime)} .ev.early{border-left-color:var(--st-early)}
+.ev.late{border-left-color:var(--st-late)} .ev.pending{border-left-color:var(--st-pending)}
+
+/* analysis */
+.apanel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow)}
+.apanel .ah{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.apanel h3{margin:0;font-size:15px} .apanel .asub{color:var(--faint);font-size:12px}
+.mbars{display:flex;flex-direction:column;gap:8px}
+.mbars .row{display:grid;grid-template-columns:52px 1fr 92px;align-items:center;gap:10px;font-size:12px}
+.mbars .lbl{color:var(--muted);font-weight:600}
+.mbars .track{height:16px;background:var(--surface-2);border-radius:5px;overflow:hidden;display:flex}
+.mbars .seg{height:100%}
+.mbars .seg.ontime{background:var(--st-ontime)} .mbars .seg.early{background:var(--st-early)}
+.mbars .seg.late{background:var(--st-late)} .mbars .seg.pending{background:var(--st-pending)}
+.mbars .val{text-align:right;color:var(--muted)} .mbars .val b{color:var(--ink)}
+.vbars{display:flex;flex-direction:column;gap:7px}
+.vbars .row{display:grid;grid-template-columns:150px 1fr 46px;align-items:center;gap:10px;font-size:12px}
+.vbars .lbl{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vbars .track{height:14px;background:var(--surface-2);border-radius:5px;overflow:hidden}
+.vbars .fill{height:100%;background:var(--st-late);border-radius:5px}
+.vbars .val{text-align:right;color:var(--muted)}
+.statusbar{display:flex;height:26px;border-radius:6px;overflow:hidden;font-size:11px;color:#fff;font-weight:600}
+.statusbar .seg{display:flex;align-items:center;justify-content:center;min-width:0;white-space:nowrap}
+.statusbar .seg.ontime{background:var(--st-ontime)} .statusbar .seg.early{background:var(--st-early)}
+.statusbar .seg.late{background:var(--st-late)} .statusbar .seg.pending{background:var(--st-pending)}
+.statusleg{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}
+.statusleg span{display:inline-flex;align-items:center;gap:6px}
+.statusleg i{width:10px;height:10px;border-radius:2px;display:inline-block}
 
 /* footer */
 .foot{margin-top:16px;color:var(--faint);font-size:12px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
@@ -171,28 +224,59 @@ tr:hover td{background:var(--surface-2)}
     </div>
   </header>
 
-  <div class="bar">
-    <div class="monthnav">
-      <button class="navbtn" id="prev" aria-label="이전 달">‹</button>
-      <div class="mlabel" id="mlabel">—</div>
-      <button class="navbtn" id="next" aria-label="다음 달">›</button>
+  <div class="tabs">
+    <button class="tab on" data-v="cal" id="tabCal">달력</button>
+    <button class="tab" data-v="ana" id="tabAna">입고 분석</button>
+  </div>
+
+  <div id="calView">
+    <div class="bar">
+      <div class="monthnav">
+        <button class="navbtn" id="prev" aria-label="이전 달">‹</button>
+        <div class="mlabel" id="mlabel">—</div>
+        <button class="navbtn" id="next" aria-label="다음 달">›</button>
+      </div>
+      <button class="btn" id="todayBtn">오늘</button>
+      <div class="spacer"></div>
+      <div class="field" id="whWrap">
+        <button class="dropbtn" id="whBtn">창고: <span class="cnt" id="whCnt">전체</span> ▾</button>
+      </div>
+      <div class="field">
+        <input id="q" type="text" placeholder="거래처·품목 검색">
+      </div>
     </div>
-    <button class="btn" id="todayBtn">오늘</button>
-    <div class="spacer"></div>
-    <div class="field" id="whWrap">
-      <button class="dropbtn" id="whBtn">창고: <span class="cnt" id="whCnt">전체</span> ▾</button>
+
+    <div class="chips" id="chips"></div>
+
+    <div class="legend">
+      <span><i class="sw ontime"></i>정시입고</span>
+      <span><i class="sw early"></i>조기입고</span>
+      <span><i class="sw late"></i>지연입고</span>
+      <span><i class="sw pending"></i>미입고</span>
+      <span class="lg-note">왼쪽 막대색 = 입고 상태 · ● = 창고</span>
     </div>
-    <div class="field">
-      <input id="q" type="text" placeholder="거래처·품목 검색">
+
+    <div class="cal">
+      <div class="dow"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+      <div class="grid" id="grid"></div>
+      <div class="empty" id="empty" hidden></div>
     </div>
   </div>
 
-  <div class="chips" id="chips"></div>
-
-  <div class="cal">
-    <div class="dow"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
-    <div class="grid" id="grid"></div>
-    <div class="empty" id="empty" hidden></div>
+  <div id="anaView" hidden>
+    <div class="chips" id="anaCards"></div>
+    <div class="apanel">
+      <div class="ah"><h3>월별 정시율</h3><span class="asub">납품예정월 · 입고완료 기준</span></div>
+      <div id="anaMonth" class="mbars"></div>
+    </div>
+    <div class="apanel">
+      <div class="ah"><h3>지연 많은 거래처</h3><span class="asub">지연 건수 상위 12</span></div>
+      <div id="anaVendor" class="vbars"></div>
+    </div>
+    <div class="apanel">
+      <div class="ah"><h3>전체 상태 구성</h3><span class="asub">납품예정일 있는 발주 라인 전체</span></div>
+      <div id="anaStatus"></div>
+    </div>
   </div>
 
   <div class="foot">
@@ -236,24 +320,32 @@ tr:hover td{background:var(--surface-2)}
   // 바코드택0001~0640 등 → '바코드택' 하나로, 수량·금액 합산 (납품예정일·창고 단위)
   function isBC(n){return n && /^바코드택/.test(String(n).replace(/\s/g,''));}
   function stripWh(w){return w?String(w).replace(/\s*창고$/,''):w;}
+  // 입고 상태: 납품일 없음=pending(미입고), 예정==납품=ontime(정시), 예정보다 빠름=early(조기), 늦음=late(지연)
+  var ST_RANK={ontime:0, early:1, late:2, pending:3};
+  function statusOf(eta, act){ if(!act) return 'pending'; if(act===eta) return 'ontime'; return act<eta?'early':'late'; }
+  var ST_LABEL={ontime:'정시',early:'조기',late:'지연',pending:'미입고'};
   function transform(raw){
     var out=[], bc={};
     raw.forEach(function(r){
+      var st=statusOf(r['납품예정일'], r['납품일']);
       if(isBC(r['발주품목'])){
         var k=(r['납품예정일']||'')+'|'+(r['창고']||'');
         var g=bc[k];
-        if(!g){g={};FIELDS.forEach(function(f){g[f]=r[f];});g['발주품목']='바코드택';g['원화단가']=null;
-          g.__n=0;g.__ven={};g.__qty=0;g.__mi=0;g.__amt=0;g.__vat=0;g.__tot=0;bc[k]=g;out.push(g);}
+        if(!g){g={};FIELDS.forEach(function(f){g[f]=r[f];});g['발주품목']='바코드택';g['원화단가']=null;g['납품일']=null;
+          g.__n=0;g.__ven={};g.__qty=0;g.__mi=0;g.__amt=0;g.__vat=0;g.__tot=0;g.__worst='ontime';bc[k]=g;out.push(g);}
         g.__n++; if(r['구매거래처'])g.__ven[r['구매거래처']]=1;
+        if(ST_RANK[st]>ST_RANK[g.__worst]) g.__worst=st;
         g.__qty+=(+r['발주수량']||0);g.__mi+=(+r['미납수량']||0);g.__amt+=(+r['발주원화금액']||0);
         g.__vat+=(+r['원화부가세']||0);g.__tot+=(+r['원화금액계']||0);
-      } else { var rr=r; if(r['창고']&&/창고$/.test(String(r['창고']))){rr=Object.assign({},r);rr['창고']=stripWh(r['창고']);} out.push(rr); }
+      } else {
+        var rr=Object.assign({}, r); rr['창고']=stripWh(r['창고']); rr.__st=st; out.push(rr);
+      }
     });
     Object.keys(bc).forEach(function(k){var g=bc[k];
       g['발주수량']=g.__qty;g['미납수량']=g.__mi;g['발주원화금액']=g.__amt;g['원화부가세']=g.__vat;g['원화금액계']=g.__tot;
       var vs=Object.keys(g.__ven);g['구매거래처']=vs.length<=1?(vs[0]||g['구매거래처']):(vs[0]+' 외 '+(vs.length-1));
-      g['발주품목규격']='통합 '+g.__n+'종'; g['창고']=stripWh(g['창고']);
-      delete g.__n;delete g.__ven;delete g.__qty;delete g.__mi;delete g.__amt;delete g.__vat;delete g.__tot;});
+      g['발주품목규격']='통합 '+g.__n+'종'; g['창고']=stripWh(g['창고']); g.__st=g.__worst;
+      delete g.__n;delete g.__ven;delete g.__qty;delete g.__mi;delete g.__amt;delete g.__vat;delete g.__tot;delete g.__worst;});
     return out;
   }
   function rowKey(r){return [r['발주일'],r['납품예정일'],r['구매거래처'],r['발주품목'],r['발주품목규격'],r['발주수량'],r['창고']].join('|');}
@@ -366,7 +458,7 @@ tr:hover td{background:var(--surface-2)}
         if(evs.length){
           var show=evs.slice(0,4);
           inner+='<div class="evs">'+show.map(function(r){
-            return '<div class="ev"><span class="q mono">'+fmtQty(r['발주수량'])+'</span><span class="nm">'+esc(r['발주품목'])+'</span><span class="wh"><i style="background:'+whColor(r['창고'])+'"></i><span>'+esc(r['창고']||'')+'</span></span></div>';
+            return '<div class="ev '+(r.__st||'')+'"><span class="q mono">'+fmtQty(r['발주수량'])+'</span><span class="nm">'+esc(r['발주품목'])+'</span><span class="wh"><i style="background:'+whColor(r['창고'])+'"></i><span>'+esc(r['창고']||'')+'</span></span></div>';
           }).join('')+'</div>';
           if(evs.length>4)inner+='<div class="more">+'+(evs.length-4)+'건 더보기</div>';
         }
@@ -401,11 +493,12 @@ tr:hover td{background:var(--surface-2)}
     document.getElementById('mTitle').textContent=ds.replace(/-/g,'.')+' 입고 예정';
     var tq=0; evs.forEach(function(r){tq+=(r['발주수량']||0)||0;});
     document.getElementById('mSub').textContent=evs.length+'건 · 총 발주수량 '+fmtWon.format(tq);
-    var cols=[['구매거래처','거래처'],['발주품목','품목'],['발주품목규격','규격'],['발주수량','수량',1],['미납수량','미납',1],['구매단위','단위'],['창고','창고'],['원화단가','단가',1],['원화금액계','금액계',1],['납품일','납품일']];
+    var cols=[['__st','상태'],['구매거래처','거래처'],['발주품목','품목'],['발주품목규격','규격'],['발주수량','수량',1],['미납수량','미납',1],['구매단위','단위'],['창고','창고'],['원화단가','단가',1],['원화금액계','금액계',1],['납품일','납품일']];
     var html='<thead><tr>'+cols.map(function(c){return '<th'+(c[2]?' class="num"':'')+'>'+c[1]+'</th>';}).join('')+'</tr></thead><tbody>';
     evs.forEach(function(r){
       html+='<tr>'+cols.map(function(c){
         var v=r[c[0]];
+        if(c[0]==='__st'){var s=r.__st||'pending';return '<td><span class="stbadge" style="color:var(--st-'+s+')"><i style="background:var(--st-'+s+')"></i>'+(ST_LABEL[s]||'')+'</span></td>';}
         if(c[0]==='창고')return '<td><span class="whtag"><i style="background:'+whColor(v)+'"></i>'+esc(v||'')+'</span></td>';
         if(c[2])return '<td class="num mono">'+(v==null||v===''?'-':fmtWon.format(v))+'</td>';
         return '<td>'+esc(v==null||v===''?'-':v)+'</td>';
@@ -432,6 +525,44 @@ tr:hover td{background:var(--surface-2)}
   }
   function toggleWhPop(){var p=document.querySelector('#whWrap .pop');if(p)p.hidden=!p.hidden;}
   document.addEventListener('click',function(e){var w=document.getElementById('whWrap');var p=w.querySelector('.pop');if(p&&!p.hidden&&!w.contains(e.target))p.hidden=true;});
+
+  // ===== 입고 분석 탭 =====
+  function pctOf(x,n){return n?Math.round(1000*x/n)/10:0;}
+  function renderAnalysis(){
+    var rows=RAW.filter(function(r){return r['납품예정일'];});
+    var c={ontime:0,early:0,late:0,pending:0}, mon={}, ven={};
+    var ORD=['ontime','early','late','pending'];
+    rows.forEach(function(r){
+      var s=statusOf(r['납품예정일'], r['납품일']); c[s]++;
+      var m=r['납품예정일'].slice(0,7); (mon[m]=mon[m]||{ontime:0,early:0,late:0,pending:0})[s]++;
+      if(s==='late'){var v=r['구매거래처']||'(미상)'; ven[v]=(ven[v]||0)+1;}
+    });
+    var tot=rows.length, deliv=c.ontime+c.early+c.late;
+    var cards=[['총 발주 라인',tot.toLocaleString(),'건'],['입고완료',pctOf(deliv,tot)+'%','('+deliv.toLocaleString()+')'],
+      ['정시율',pctOf(c.ontime,deliv)+'%','입고완료 중'],['지연율',pctOf(c.late,deliv)+'%','입고완료 중'],['미입고',c.pending.toLocaleString(),'건']];
+    document.getElementById('anaCards').innerHTML=cards.map(function(x){return '<div class="chip"><div class="k">'+x[0]+'</div><div class="v mono">'+x[1]+(x[2]?' <small>'+x[2]+'</small>':'')+'</div></div>';}).join('');
+    var mkeys=Object.keys(mon).sort();
+    document.getElementById('anaMonth').innerHTML=mkeys.map(function(m){
+      var a=mon[m], t=a.ontime+a.early+a.late+a.pending, d=a.ontime+a.early+a.late;
+      var segs=ORD.map(function(s){var w=t?100*a[s]/t:0;return w>0?'<div class="seg '+s+'" style="width:'+w+'%" title="'+ST_LABEL[s]+' '+a[s]+'건"></div>':'';}).join('');
+      return '<div class="row"><span class="lbl">'+m.slice(2)+'월</span><div class="track">'+segs+'</div><span class="val">정시 <b>'+pctOf(a.ontime,d)+'%</b></span></div>';
+    }).join('')||'<div class="empty">데이터 없음</div>';
+    var vlist=Object.keys(ven).map(function(k){return [k,ven[k]];}).sort(function(x,y){return y[1]-x[1];}).slice(0,12);
+    var vmax=vlist.length?vlist[0][1]:1;
+    document.getElementById('anaVendor').innerHTML=vlist.map(function(x){
+      return '<div class="row"><span class="lbl" title="'+esc(x[0])+'">'+esc(x[0])+'</span><div class="track"><div class="fill" style="width:'+(100*x[1]/vmax)+'%"></div></div><span class="val mono">'+x[1]+'</span></div>';
+    }).join('')||'<div class="empty">지연 건 없음</div>';
+    var segs=ORD.map(function(s){var w=tot?100*c[s]/tot:0;return w>0?'<div class="seg '+s+'" style="width:'+w+'%">'+(w>7?ST_LABEL[s]+' '+pctOf(c[s],tot)+'%':'')+'</div>':'';}).join('');
+    var leg=ORD.map(function(s){return '<span><i style="background:var(--st-'+s+')"></i>'+ST_LABEL[s]+' '+c[s].toLocaleString()+'건</span>';}).join('');
+    document.getElementById('anaStatus').innerHTML='<div class="statusbar">'+segs+'</div><div class="statusleg">'+leg+'</div>';
+  }
+  function switchTab(v){
+    document.getElementById('calView').hidden=(v!=='cal');
+    document.getElementById('anaView').hidden=(v!=='ana');
+    document.getElementById('tabCal').classList.toggle('on',v==='cal');
+    document.getElementById('tabAna').classList.toggle('on',v==='ana');
+    if(v==='ana') renderAnalysis();
+  }
 
   // upload (여러 파일 동시 + 기존 누적에 추가)
   function normRows(rows){
@@ -474,6 +605,8 @@ tr:hover td{background:var(--surface-2)}
   function clearData(){}
 
   // events
+  document.getElementById('tabCal').addEventListener('click',function(){switchTab('cal');});
+  document.getElementById('tabAna').addEventListener('click',function(){switchTab('ana');});
   document.getElementById('upBtn').addEventListener('click',function(){document.getElementById('file').click();});
   document.getElementById('file').addEventListener('change',function(e){handleFiles(e.target.files);e.target.value='';});
   document.getElementById('clearBtn').addEventListener('click',clearData);
