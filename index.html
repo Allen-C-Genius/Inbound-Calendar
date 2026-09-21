@@ -247,6 +247,9 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
       <div class="field" id="whWrap">
         <button class="dropbtn" id="whBtn">창고: <span class="cnt" id="whCnt">전체</span> ▾</button>
       </div>
+      <div class="field" id="stWrap">
+        <button class="dropbtn" id="stBtn">상태: <span class="cnt" id="stCnt">전체</span> ▾</button>
+      </div>
       <div class="field">
         <input id="q" type="text" placeholder="거래처·품목 검색">
       </div>
@@ -320,7 +323,7 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
   // header aliases -> canonical
   var ALIAS={'입고예정일':'납품예정일','입고일':'납품일','거래처':'구매거래처','품목':'발주품목','품명':'발주품목','규격':'발주품목규격','단위':'구매단위','수량':'발주수량','입고창고':'창고','금액계':'원화금액계','발주금액':'발주원화금액','부가세':'원화부가세','단가':'원화단가'};
 
-  var BUILT_AT="2026-09-21 11:28";
+  var BUILT_AT="2026-09-21 12:59";
   var RAW=[], DATA=[], SRC='sample', UPAT='', FILES=[];
   function loadInitial(){
     try{RAW=JSON.parse(document.getElementById('orders').textContent)||[];}catch(e){RAW=[];}
@@ -418,7 +421,8 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
   function whColor(w){return whColorMap[w||'미지정']||'#888';}
 
   // state
-  var view={y:0,m:0}, whSel=new Set(), q='';
+  var view={y:0,m:0}, whSel=new Set(), stSel=new Set(), q='';
+  var ST_LIST=[['early','조기입고'],['ontime','정시입고'],['late','지연입고'],['pending','미입고']];
 
   function monthKey(y,m){return y+'-'+pad(m+1);}
   function rowsWithDate(){return DATA.filter(function(r){return r['납품예정일'];});}
@@ -428,6 +432,7 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
 
   function passFilter(r){
     if(whSel.size && !whSel.has(r['창고']||'미지정'))return false;
+    if(stSel.size && !stSel.has(r.__st))return false;
     if(q){var s=((r['구매거래처']||'')+' '+(r['발주품목']||'')+' '+(r['발주품목규격']||'')).toLowerCase();if(s.indexOf(q)<0)return false;}
     return true;
   }
@@ -493,7 +498,7 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
     var emp=document.getElementById('empty');
     if(!mr.length){emp.hidden=false;emp.innerHTML='<b>'+(view.y)+'년 '+(view.m+1)+'월</b>에 표시할 입고 예정이 없습니다. 위 화살표로 다른 달을 보거나 필터를 확인하세요.';}
     else emp.hidden=true;
-    renderWhPop();
+    renderWhPop(); renderStPop();
   }
 
   function esc(s){s=(s==null?'':String(s));return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -551,6 +556,20 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
   }
   function toggleWhPop(){var p=document.querySelector('#whWrap .pop');if(p)p.hidden=!p.hidden;}
   document.addEventListener('click',function(e){var w=document.getElementById('whWrap');var p=w.querySelector('.pop');if(p&&!p.hidden&&!w.contains(e.target))p.hidden=true;});
+  // 상태 필터 (조기/정시/지연/미입고)
+  function renderStPop(){
+    document.getElementById('stCnt').textContent=stSel.size?stSel.size+'개':'전체';
+    var wrap=document.getElementById('stWrap'); var pop=wrap.querySelector('.pop');
+    if(!pop){pop=document.createElement('div');pop.className='pop';pop.hidden=true;wrap.appendChild(pop);}
+    pop.innerHTML='<div class="top"><span class="lnk" data-a="all">전체선택</span><span class="lnk" data-a="none">해제</span></div>'+
+      ST_LIST.map(function(x){return '<label><input type="checkbox" data-s="'+x[0]+'" '+(stSel.has(x[0])?'checked':'')+'><span class="dot" style="background:var(--st-'+x[0]+')"></span><span class="wname">'+x[1]+'</span></label>';}).join('');
+    pop.querySelectorAll('input[type=checkbox]').forEach(function(cb){
+      cb.addEventListener('change',function(){var s=cb.getAttribute('data-s');if(cb.checked)stSel.add(s);else stSel.delete(s);render();});
+    });
+    pop.querySelectorAll('.lnk').forEach(function(l){l.addEventListener('click',function(){if(l.getAttribute('data-a')==='all')stSel=new Set(ST_LIST.map(function(x){return x[0];}));else stSel.clear();render();});});
+  }
+  function toggleStPop(){var p=document.querySelector('#stWrap .pop');if(p)p.hidden=!p.hidden;}
+  document.addEventListener('click',function(e){var w=document.getElementById('stWrap');var p=w.querySelector('.pop');if(p&&!p.hidden&&!w.contains(e.target))p.hidden=true;});
 
   // ===== 입고 분석 탭 =====
   function pctOf(x,n){return n?Math.round(1000*x/n)/10:0;}
@@ -641,6 +660,7 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
   document.getElementById('next').addEventListener('click',function(){view.m++;if(view.m>11){view.m=0;view.y++;}render();});
   document.getElementById('todayBtn').addEventListener('click',function(){var t=new Date();view={y:t.getFullYear(),m:t.getMonth()};render();});
   document.getElementById('whBtn').addEventListener('click',function(e){e.stopPropagation();toggleWhPop();});
+  document.getElementById('stBtn').addEventListener('click',function(e){e.stopPropagation();toggleStPop();});
   document.getElementById('q').addEventListener('input',function(e){q=e.target.value.trim().toLowerCase();render();});
   document.getElementById('mClose').addEventListener('click',closeModal);
   document.getElementById('ov').addEventListener('click',function(e){if(e.target.id==='ov')closeModal();});
