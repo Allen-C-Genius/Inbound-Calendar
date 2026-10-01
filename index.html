@@ -162,6 +162,13 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
 .tab:hover{color:var(--ink);background:var(--surface)}
 .tab.on{background:var(--accent);color:#fff}
 
+/* basis toggle (발주/납품 기준) */
+.segtog{display:inline-flex;gap:4px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:4px}
+.segtog button{font-family:inherit;font-size:13px;font-weight:600;color:var(--muted);background:transparent;border:none;padding:7px 14px;border-radius:7px;cursor:pointer;transition:background .12s,color .12s}
+.segtog button:hover{color:var(--ink)}
+.segtog button.on{background:var(--accent);color:#fff}
+.segtog button small{font-weight:500;opacity:.8;font-size:10.5px;margin-left:3px}
+
 /* legend */
 .legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:10px;font-size:12px;color:var(--muted)}
 .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -221,7 +228,7 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
   <header class="hd">
     <div>
       <h1>입고 예정일</h1>
-      <div class="sub"><b>납품예정일</b> 기준으로 그날 입고되는 품목을 자동 배치합니다</div>
+      <div class="sub"><b>발주·납품 기준</b>을 전환해 그날 입고(예정/실제) 품목을 자동 배치합니다</div>
     </div>
     <div class="hd-actions">
       <button class="btn" id="themeBtn" title="테마 전환">◐ 테마</button>
@@ -243,6 +250,10 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
         <button class="navbtn" id="next" aria-label="다음 달">›</button>
       </div>
       <button class="btn" id="todayBtn">오늘</button>
+      <div class="segtog" id="basisTog" title="발주 기준: 납품예정일·발주금액 / 납품 기준: 실제 납품일·입고금액">
+        <button data-b="order" class="on">발주 기준<small>예정일</small></button>
+        <button data-b="delivery">납품 기준<small>실제</small></button>
+      </div>
       <div class="spacer"></div>
       <div class="field" id="whWrap">
         <button class="dropbtn" id="whBtn">창고: <span class="cnt" id="whCnt">전체</span> ▾</button>
@@ -323,7 +334,7 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
   // header aliases -> canonical
   var ALIAS={'입고예정일':'납품예정일','입고일':'납품일','거래처':'구매거래처','품목':'발주품목','품명':'발주품목','규격':'발주품목규격','단위':'구매단위','수량':'발주수량','입고창고':'창고','금액계':'원화금액계','발주금액':'발주원화금액','부가세':'원화부가세','단가':'원화단가'};
 
-  var BUILT_AT="2026-10-01 09:45";
+  var BUILT_AT="2026-10-01 13:00";
   var RAW=[], DATA=[], SRC='sample', UPAT='', FILES=[];
   function loadInitial(){
     try{RAW=JSON.parse(document.getElementById('orders').textContent)||[];}catch(e){RAW=[];}
@@ -344,8 +355,9 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
         var k=(r['납품예정일']||'')+'|'+(r['창고']||'');
         var g=bc[k];
         if(!g){g={};FIELDS.forEach(function(f){g[f]=r[f];});g['발주품목']='바코드택';g['원화단가']=null;g['납품일']=null;
-          g.__n=0;g.__ven={};g.__qty=0;g.__mi=0;g.__amt=0;g.__vat=0;g.__tot=0;g.__worst='ontime';bc[k]=g;out.push(g);}
+          g.__n=0;g.__ven={};g.__qty=0;g.__mi=0;g.__amt=0;g.__vat=0;g.__tot=0;g.__worst='ontime';g.__acts={};bc[k]=g;out.push(g);}
         g.__n++; if(r['구매거래처'])g.__ven[r['구매거래처']]=1;
+        if(r['납품일'])g.__acts[r['납품일']]=1;
         if(ST_RANK[st]>ST_RANK[g.__worst]) g.__worst=st;
         g.__qty+=(+r['발주수량']||0);g.__mi+=(+r['미납수량']||0);g.__amt+=(+r['발주원화금액']||0);
         g.__vat+=(+r['원화부가세']||0);g.__tot+=(+r['원화금액계']||0);
@@ -357,7 +369,8 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
       g['발주수량']=g.__qty;g['미납수량']=g.__mi;g['발주원화금액']=g.__amt;g['원화부가세']=g.__vat;g['원화금액계']=g.__tot;
       var vs=Object.keys(g.__ven);g['구매거래처']=vs.length<=1?(vs[0]||g['구매거래처']):(vs[0]+' 외 '+(vs.length-1));
       g['발주품목규격']='통합 '+g.__n+'종'; g['창고']=stripWh(g['창고']); g.__st=g.__worst;
-      delete g.__n;delete g.__ven;delete g.__qty;delete g.__mi;delete g.__amt;delete g.__vat;delete g.__tot;delete g.__worst;});
+      var acts=Object.keys(g.__acts||{}); g['납품일']=acts.length?acts.sort()[acts.length-1]:null;  // 구성품 중 최신 납품일
+      delete g.__n;delete g.__ven;delete g.__qty;delete g.__mi;delete g.__amt;delete g.__vat;delete g.__tot;delete g.__worst;delete g.__acts;});
     return out;
   }
   function rowKey(r){return [r['발주일'],r['납품예정일'],r['구매거래처'],r['발주품목'],r['발주품목규격'],r['발주수량'],r['창고']].join('|');}
@@ -422,10 +435,18 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
 
   // state
   var view={y:0,m:0}, whSel=new Set(), stSel=new Set(), q='';
+  var basis='order'; // 'order'=발주(납품예정일·발주금액계) / 'delivery'=납품(실제 납품일·납품금액계)
   var ST_LIST=[['early','조기입고'],['ontime','정시입고'],['late','지연입고'],['pending','미입고']];
 
+  // 기준(발주/납품)에 따른 날짜·금액·수량
+  function dateField(){return basis==='order'?'납품예정일':'납품일';}
+  function ordAmt(r){return (r['원화금액계']||r['발주원화금액']||0)||0;}
+  function recvRatio(r){var oq=(+r['발주수량']||0);if(oq<=0)return 0;var rq=oq-(+r['미납수량']||0);return rq<=0?0:(rq>oq?1:rq/oq);}
+  function rowAmt(r,m){m=m||basis;return m==='order'?ordAmt(r):ordAmt(r)*recvRatio(r);}
+  function rowQty(r,m){m=m||basis;return m==='order'?(+r['발주수량']||0):Math.max(0,(+r['발주수량']||0)-(+r['미납수량']||0));}
+
   function monthKey(y,m){return y+'-'+pad(m+1);}
-  function rowsWithDate(){return DATA.filter(function(r){return r['납품예정일'];});}
+  function rowsWithDate(){var f=dateField();return DATA.filter(function(r){return r[f];});}
   function pickDefaultMonth(){
     var t=new Date(); return {y:t.getFullYear(), m:t.getMonth()};  // 항상 현재 달로 시작
   }
@@ -437,8 +458,8 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
     return true;
   }
   function monthRows(){
-    var mk=monthKey(view.y,view.m);
-    return rowsWithDate().filter(function(r){return r['납품예정일'].slice(0,7)===mk && passFilter(r);});
+    var mk=monthKey(view.y,view.m), f=dateField();
+    return rowsWithDate().filter(function(r){return r[f].slice(0,7)===mk && passFilter(r);});
   }
 
   var fmtWon=new Intl.NumberFormat('ko-KR');
@@ -446,19 +467,21 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
 
   function render(){
     buildWhColors();
-    document.getElementById('mlabel').innerHTML=view.y+'년 '+(view.m+1)+'월<small>납품예정 기준</small>';
+    document.getElementById('mlabel').innerHTML=view.y+'년 '+(view.m+1)+'월<small>'+(basis==='order'?'납품예정 기준':'실제 납품 기준')+'</small>';
     // summary
     var mr=monthRows();
     var uItem=new Set(),uVen=new Set(),uWh=new Set(),sumWon=0;
-    mr.forEach(function(r){uItem.add(r['발주품목']);uVen.add(r['구매거래처']);uWh.add(r['창고']);sumWon+=(r['원화금액계']||r['발주원화금액']||0)||0;});
-    var chips=[['입고 건수',mr.length,''],['품목',uItem.size,'종'],['거래처',uVen.size,'곳'],['창고',uWh.size,'곳'],['금액계','₩'+fmtWon.format(Math.round(sumWon)),'']];
+    mr.forEach(function(r){uItem.add(r['발주품목']);uVen.add(r['구매거래처']);uWh.add(r['창고']);sumWon+=rowAmt(r);});
+    var amtLbl=basis==='order'?'발주금액계':'납품금액계';
+    var chips=[['입고 건수',mr.length,''],['품목',uItem.size,'종'],['거래처',uVen.size,'곳'],['창고',uWh.size,'곳'],[amtLbl,'₩'+fmtWon.format(Math.round(sumWon)),'']];
     document.getElementById('chips').innerHTML=chips.map(function(c){
       return '<div class="chip"><div class="k">'+c[0]+'</div><div class="v mono">'+c[1]+(c[2]?' <small>'+c[2]+'</small>':'')+'</div></div>';
     }).join('');
 
     // grid
     var first=new Date(view.y,view.m,1), start=new Date(first); start.setDate(1-first.getDay());
-    var byDay={}; mr.forEach(function(r){(byDay[r['납품예정일']]=byDay[r['납품예정일']]||[]).push(r);});
+    var df=dateField();
+    var byDay={}; mr.forEach(function(r){(byDay[r[df]]=byDay[r[df]]||[]).push(r);});
     var todayStr=ymd(new Date());
     var g=document.getElementById('grid'); g.innerHTML='';
     var cells=[]; var d=new Date(start);
@@ -472,7 +495,7 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
         if(evs.length){
           var show=evs.slice(0,4);
           inner+='<div class="evs">'+show.map(function(r){
-            return '<div class="ev '+(r.__st||'')+'"><span class="q mono">'+fmtQty(r['발주수량'])+'</span><span class="nm">'+esc(r['발주품목'])+'</span><span class="wh"><i style="background:'+whColor(r['창고'])+'"></i><span>'+esc(r['창고']||'')+'</span></span></div>';
+            return '<div class="ev '+(r.__st||'')+'"><span class="q mono">'+fmtQty(rowQty(r))+'</span><span class="nm">'+esc(r['발주품목'])+'</span><span class="wh"><i style="background:'+whColor(r['창고'])+'"></i><span>'+esc(r['창고']||'')+'</span></span></div>';
           }).join('')+'</div>';
           if(evs.length>4)inner+='<div class="more">+'+(evs.length-4)+'건 더보기</div>';
         }
@@ -484,10 +507,10 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
       if(d.getMonth()!==view.m && d.getDay()===0) break;
     }
     // range/footer
-    var all=rowsWithDate().map(function(r){return r['납품예정일'];}).sort();
+    var all=rowsWithDate().map(function(r){return r[df];}).sort();
     document.getElementById('rangeInfo').textContent=all.length?('데이터 기간 '+all[0]+' ~ '+all[all.length-1]+' · 총 '+DATA.length.toLocaleString()+'건'):'데이터 없음';
     var sb=document.getElementById('srcBadge'), cbn=document.getElementById('clearBtn'); cbn.hidden=true;
-    var mset={};rowsWithDate().forEach(function(r){mset[r['납품예정일'].slice(0,7)]=1;});
+    var mset={};rowsWithDate().forEach(function(r){mset[r[df].slice(0,7)]=1;});
     var minfo=(FILES.length?FILES.length+'개 파일 · ':'')+Object.keys(mset).length+'개월'+(UPAT?' · '+UPAT+' 반영':'');
     if(SRC==='db'){ sb.textContent='공용 데이터 (실시간)'; sb.className='badge-src live'; document.getElementById('upInfo').textContent=minfo; }
     else if(SRC==='upload'){ sb.textContent='이 화면에만 반영됨'; sb.className='badge-src'; document.getElementById('upInfo').textContent=minfo+' · 공용 저장 안 됨'; }
@@ -496,7 +519,7 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
     var ba=document.getElementById('builtAt');
     ba.textContent=(BUILT_AT&&BUILT_AT.indexOf('_'+'_')<0)?('🕒 업데이트 '+BUILT_AT):'';
     var emp=document.getElementById('empty');
-    if(!mr.length){emp.hidden=false;emp.innerHTML='<b>'+(view.y)+'년 '+(view.m+1)+'월</b>에 표시할 입고 예정이 없습니다. 위 화살표로 다른 달을 보거나 필터를 확인하세요.';}
+    if(!mr.length){emp.hidden=false;emp.innerHTML='<b>'+(view.y)+'년 '+(view.m+1)+'월</b>에 표시할 '+(basis==='order'?'입고 예정':'실제 입고')+'이 없습니다. 위 화살표로 다른 달을 보거나 필터를 확인하세요.';}
     else emp.hidden=true;
     renderWhPop(); renderStPop();
   }
@@ -504,32 +527,39 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
   function esc(s){s=(s==null?'':String(s));return s.replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 
   // 공통 상세표 팝업
-  function openRows(title, sub, evs){
+  function openRows(title, sub, evs, mode){
+    mode=mode||basis;
     document.getElementById('mTitle').textContent=title;
     document.getElementById('mSub').textContent=sub;
-    var cols=[['__st','상태'],['구매거래처','거래처'],['발주품목','품목'],['발주품목규격','규격'],['발주수량','수량',1],['미납수량','미납',1],['구매단위','단위'],['창고','창고'],['원화단가','단가',1],['원화금액계','금액계',1],['납품예정일','납품예정일'],['납품일','납품일']];
+    var qtyLbl=mode==='order'?'발주수량':'입고수량', amtLbl=mode==='order'?'발주금액계':'납품금액계';
+    var cols=[['__st','상태'],['구매거래처','거래처'],['발주품목','품목'],['발주품목규격','규격'],['__q',qtyLbl,1],['미납수량','미납',1],['구매단위','단위'],['창고','창고'],['원화단가','단가',1],['__amt',amtLbl,1],['납품예정일','납품예정일'],['납품일','납품일']];
     var html='<thead><tr>'+cols.map(function(c){return '<th'+(c[2]?' class="num"':'')+'>'+c[1]+'</th>';}).join('')+'</tr></thead><tbody>';
     if(!evs.length){ html+='<tr><td colspan="'+cols.length+'" style="text-align:center;color:var(--muted);padding:24px">해당 내역이 없습니다</td></tr>'; }
     evs.forEach(function(r){
       html+='<tr>'+cols.map(function(c){
-        var v=r[c[0]];
         if(c[0]==='__st'){var s=r.__st||'pending';return '<td><span class="stbadge" style="color:var(--st-'+s+')"><i style="background:var(--st-'+s+')"></i>'+(ST_LABEL[s]||'')+'</span></td>';}
+        if(c[0]==='__q')return '<td class="num mono">'+fmtWon.format(Math.round(rowQty(r,mode)))+'</td>';
+        if(c[0]==='__amt')return '<td class="num mono">'+fmtWon.format(Math.round(rowAmt(r,mode)))+'</td>';
+        var v=r[c[0]];
         if(c[0]==='창고')return '<td><span class="whtag"><i style="background:'+whColor(v)+'"></i>'+esc(v||'')+'</span></td>';
         if(c[2])return '<td class="num mono">'+(v==null||v===''?'-':fmtWon.format(v))+'</td>';
         return '<td>'+esc(v==null||v===''?'-':v)+'</td>';
       }).join('')+'</tr>';
     });
     html+='</tbody>';
-    var tw=0; evs.forEach(function(r){tw+=(r['원화금액계']||r['발주원화금액']||0)||0;});
-    html+='<tfoot><tr><td colspan="9" class="tflbl">예정 총 입고금액</td><td class="num mono tfval">₩'+fmtWon.format(Math.round(tw))+'</td><td colspan="2"></td></tr></tfoot>';
+    var tw=0; evs.forEach(function(r){tw+=rowAmt(r,mode);});
+    var footLbl=mode==='order'?'발주 총 금액(예정)':'납품 총 입고금액';
+    html+='<tfoot><tr><td colspan="9" class="tflbl">'+footLbl+'</td><td class="num mono tfval">₩'+fmtWon.format(Math.round(tw))+'</td><td colspan="2"></td></tr></tfoot>';
     document.getElementById('mTable').innerHTML=html;
     document.getElementById('ov').classList.add('on');
   }
   // 달력 날짜 클릭
   function openDay(ds,evs){
     evs=evs.slice().sort(function(a,b){return (a['창고']||'').localeCompare(b['창고']||'');});
-    var tq=0; evs.forEach(function(r){tq+=(r['발주수량']||0)||0;});
-    openRows(ds.replace(/-/g,'.')+' 입고 예정', evs.length+'건 · 총 발주수량 '+fmtWon.format(tq), evs);
+    var tq=0; evs.forEach(function(r){tq+=rowQty(r);});
+    var ttl=ds.replace(/-/g,'.')+(basis==='order'?' 입고 예정':' 실제 입고');
+    var qlbl=basis==='order'?'총 발주수량':'총 입고수량';
+    openRows(ttl, evs.length+'건 · '+qlbl+' '+fmtWon.format(Math.round(tq)), evs);
   }
   // 월별 정시율 막대 구간 클릭 → 해당 월·상태 품목 리스트 (내수 기준)
   function openStatusList(month, status){
@@ -537,7 +567,7 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
       .map(function(r){var o=Object.assign({},r); o['창고']=stripWh(r['창고']); o.__st=status; return o;})
       .sort(function(a,b){return (a['구매거래처']||'').localeCompare(b['구매거래처']||'');});
     var y=month.slice(0,4), m=+month.slice(5,7);
-    openRows(y+'년 '+m+'월 · '+(ST_LABEL[status]||'')+' 내역', evs.length+'건 (내수 기준)', evs);
+    openRows(y+'년 '+m+'월 · '+(ST_LABEL[status]||'')+' 내역', evs.length+'건 (내수 기준)', evs, 'order');
   }
   function closeModal(){document.getElementById('ov').classList.remove('on');}
 
@@ -650,6 +680,12 @@ tfoot .tfval{font-weight:700;font-size:14.5px;color:var(--ink)}
   function clearData(){}
 
   // events
+  document.getElementById('basisTog').addEventListener('click',function(e){
+    var b=e.target.closest('button'); if(!b)return;
+    basis=b.getAttribute('data-b');
+    this.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b);});
+    whSel.clear(); stSel.clear(); render();
+  });
   document.getElementById('tabCal').addEventListener('click',function(){switchTab('cal');});
   document.getElementById('tabAna').addEventListener('click',function(){switchTab('ana');});
   document.getElementById('anaMonth').addEventListener('click',function(e){var seg=e.target.closest('.seg');if(seg&&seg.getAttribute('data-m'))openStatusList(seg.getAttribute('data-m'),seg.getAttribute('data-s'));});
